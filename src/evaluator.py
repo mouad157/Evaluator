@@ -22,6 +22,7 @@ import csv
 import pandas as pd
 from pymongo import MongoClient
 import torch
+import requests
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from QTypeDefs import getPromptMCQ
 from pymongo import MongoClient
@@ -130,15 +131,56 @@ def get_type(df):
     df['predicted_type'] = df['question'].apply(predict_question_type,model=model,tokenizer=tokenizer,device= device)
     # Send the data to the server
     return df
+def get_openai_models(api_key):
+    try:
+        openai.api_key =api_key
+        response = openai.models.list()
+        return [model.id for model in response]
+    except:
+        return f"Error: {response.status_code}, {response.text}"
+def get_mistral_models(api_key):
+    url = "https://api.mistral.ai/v1/models"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code == 200:
+        models_json = response.json()
+        text_completion_models = [model["id"] for model in models_json["data"] if model["capabilities"]['completion_chat']]
+        return text_completion_models
+    else:
+        return f"Error: {response.status_code}, {response.text}"
+    
+def get_deepseek_models(api_key):
+    url = "https://api.deepseek.com/models"
 
+    payload={}
+    headers = {
+    'Accept': 'application/json',
+    'Authorization': f'Bearer {api_key}'
+    }
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+    if response.status_code == 200:
+        models_json = response.json()
+        text_completion_models = [model["id"] for model in models_json["data"]]
+        return text_completion_models
+    else:
+        return f"Error: {response.status_code}, {response.text}"
+def get_anthropic_models(api_key):
+    client = anthropic.Anthropic(api_key=api_key)
+    response = client.models.list(limit=20).data
+    models = [model.id for model in response]
+    return models
 ####################################################################################################################################
 
-def evaluate(input_file, model_name, api_key,system_prompt,output_file="questions_answers.csv"):
+def evaluate(input_file,model_type, model_name, api_key,system_prompt,output_file="questions_answers.csv"):
     """
     Evaluate a model on a dataset.
 
     Parameters:
         input_file (str): Path to input CSV file.
+        model_type (str): choose one of those openai, mistral, deepseek, anthropic.
         model_name (str): Model name.
         api_key (str): API key.
         system_prompt (str): System-level prompt.
@@ -148,16 +190,18 @@ def evaluate(input_file, model_name, api_key,system_prompt,output_file="question
         pd.DataFrame: Updated dataset with results.
         float: The overall model accuracy.
     """
+
     if input_file:
         dataset = pd.read_csv(input_file)
         dataset_type = get_type(dataset)
 
-    def generate_answer(question, model_name,key,prompt=None):
+    def generate_answer(question,model_type, model_name,key,prompt=None):
         """
         Generate an answer using the specified AI model.
 
         Parameters:
             question (str): The input question.
+            model_type (str): choose one of those openai, mistral, deepseek, anthropic.
             model_name (str): The model being used.
             key (str): API key for authentication.
             prompt (str, optional): System prompt.
@@ -165,6 +209,16 @@ def evaluate(input_file, model_name, api_key,system_prompt,output_file="question
         Returns:
             str: The generated answer.
         """
+        if model_type == "openai":
+          OPENAI_MODELS = get_openai_models(api_key)
+        elif model_type == "mistral":
+          MISTRAL_MODELS = get_mistral_models(api_key)
+        elif model_type == "deepseek":
+          DEEPSEEK_MODELS = get_deepseek_models(api_key)
+        elif model_type == "anthropic":
+          ANTHROPIC_MODELS = get_anthropic_models(api_key)
+        else:
+          return "The model_type you provided is not openai, mistral, anthropic nor deepseek. Please provide a correct model type"
         if prompt and model_name in MISTRAL_MODELS:
             message= [
                 {"role": "assistant", "content": prompt},
@@ -202,7 +256,7 @@ def evaluate(input_file, model_name, api_key,system_prompt,output_file="question
             return "Model not found."
     # Evaluate Model
     y_true = [item["answer"] for _,item in dataset_type.iterrows()]
-    y_pred = [generate_answer(item["question"], model_name,api_key,prompt=system_prompt) for _,item in dataset_type.iterrows()]
+    y_pred = [generate_answer(item["question"],model_type, model_name,api_key,prompt=system_prompt) for _,item in dataset_type.iterrows()]
     for index, elem in dataset_type.iterrows():
         dataset_type.at[index,"model_name"] = str(model_name)
         dataset_type.at[index,"model_answer"] = y_pred[index]
