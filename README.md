@@ -4,7 +4,7 @@
 ### 📌 Overview
 This project evaluates the performance of different AI models (OpenAI GPT, Mistral, DeepSeek, and Anthropic) 
 on question-answering tasks. It:
-- Predicts question types using a fine-tuned LLaMA model.
+- Predicts question types using a fine-tuned T5-large model.
 - Generates model answers for given questions.
 - Compares generated answers with ground truth answers.
 - Computes similarity scores to measure model accuracy.
@@ -12,7 +12,7 @@ on question-answering tasks. It:
 
 ### 🚀 Features
 - Supports multiple AI models (OpenAI, Mistral, DeepSeek, and Anthropic).
-- Fine-tuned LLaMA model for question classification.
+- Fine-tuned T5-large model for question classification.
 - Automatic evaluation with scoring metrics.
 - MongoDB storage for result tracking.
 
@@ -20,8 +20,8 @@ on question-answering tasks. It:
 
 #### 1️⃣ Clone the Repository
 ```sh
-git clone https://github.com/yourusername/your-repo-name.git
-cd your-repo-name
+git clone https://github.com/mouad157/Evaluator.git
+cd Evaluator
 ```
 #### 2️⃣ Install Dependencies
 
