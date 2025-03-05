@@ -39,9 +39,8 @@ input_file = "data/questions.csv"  # Path to your CSV file
 model_name = "gpt-4o"  # Change to your model
 api_key = "your-api-key"  # Replace with your key
 system_prompt = "Answer concisely."
-metric = "f1_score"  # Adjust as needed
 
-df, avg_score = evaluate(input_file, model_name, api_key, system_prompt, metric)
+df, avg_score = evaluate(input_file, model_name, api_key, system_prompt)
 
 print(f"Model accuracy: {avg_score:.2f}%")
 ```
