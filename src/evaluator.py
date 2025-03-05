@@ -133,7 +133,7 @@ def get_type(df):
 
 ####################################################################################################################################
 
-def evaluate(input_file, model_name, api_key,system_prompt,metric,output_file="questions_answers.csv"):
+def evaluate(input_file, model_name, api_key,system_prompt,output_file="questions_answers.csv"):
     """
     Evaluate a model on a dataset.
 
@@ -142,7 +142,6 @@ def evaluate(input_file, model_name, api_key,system_prompt,metric,output_file="q
         model_name (str): Model name.
         api_key (str): API key.
         system_prompt (str): System-level prompt.
-        metric (str): Evaluation metric.
         output_file (str, optional): Output file name.
 
     Returns:
